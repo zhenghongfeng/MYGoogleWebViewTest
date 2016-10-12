@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <link href="map_intl.css" rel="stylesheet" type="text/css" />
+    <style>
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    #map {
+        height: 100%;
+    }
+    #floating-panel {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+        text-align: center;
+        font-family: 'Roboto','sans-serif';
+        line-height: 30px;
+        padding-left: 10px;
+    }
+    </style>
+</head>
+
+<body>
+<!--     by zhf-->
+    <div id="floating-panel">
+        <input id="address" type="textbox" value="">
+            <input id="submit" type="button" value="搜索">
+                </div>
+    
+    <input id="pac-input" class="controls" type="text" placeholder="Search Box">
+    <div id="map"></div>
+<!--    end-->
+    <script>
+    if (!window.define) {
+        function define(args, callBack) {
+            window.GL = callBack.call(this);
+        }
+    }
+    </script>
+    <script src=gmap.js></script>
+    <div id="map"></div>
+    <script>
+    var map;
+    var markers = [];
+    var overlaysAll = []; //存放overlay数组的字典
+    var lastIndex = -1;
+    var mutiOverlay = null;
+    var infoWindow = null;
+    var star = null;
+    var myLocation = null;
+    var isMutiInfoWindowStyle = false; 
+
+    var geocoder;
+
+    function initMap() {
+        console.log('initMap()');
+        if (typeof(google) === 'undefined') {
+            console.log('google load error.');
+            CTGoogleMapView.loadGoogleMapFail();
+            return;
+        }
+
+<!--        urlinfo = window.location.href; //获取当前页面的url-->
+<!--        alert(urlinfo);-->
+<!--        console.log(urlinfo);-->
+<!--        var lat = GetArgsFromHref(urlinfo, 'lat') * 1;-->
+<!--        alert(lat);-->
+<!--        var lng = GetArgsFromHref(urlinfo, 'lng') * 1;-->
+<!--        console.log(lat);-->
+<!--        console.log(lng);-->
+
+        var lat = CTGoogleMapView.getCurrentLocationLat();
+        var lng = CTGoogleMapView.getCurrentLocationLon();
+        
+        geocoder = new google.maps.Geocoder();
+        document.getElementById('submit').addEventListener('click', function() {
+                                                           geocodeAddress(geocoder, map);
+                                                           });
+              
+        // 设置地图参数
+        var mapOptions = {
+            zoom: 13,
+            zoomControl: false,
+            // zoomControlOptions: {
+            //     position: google.maps.ControlPosition.LEFT_CENTER
+            // },
+            center: {
+                lat: lat,
+                lng: lng
+            },
+            mapTypeControl: false,
+            streetViewControl: false,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        
+        map = new google.maps.Map(document.getElementById('map'), mapOptions);
+        
+        // 点击兴趣点的时候不显示兴趣点信息
+        disablePOIInfoWindow();
+        
+        // infoWindow = new google.maps.InfoWindow({
+        //     maxWidth: window.screen.availWidth / 4
+        // });
+
+        // 设置Map Center Change Event
+        google.maps.event.addListener(map, 'center_changed',
+            function() {
+                var center = map.getCenter();
+                // 调用oc方法
+                CTGoogleMapView.mapCenterChanged([center.lat(), center.lng()])
+            });
+
+        // 设置Map Zoom Change Event
+        google.maps.event.addListener(map, 'zoom_changed',
+            function() {
+                // 调用oc方法
+                CTGoogleMapView.mapZoomChanged(map.getZoom())
+            });
+
+<!--        google.maps.event.addListener(map, 'click', function(event){-->
+<!--            update_timeout = setTimeout(function(){-->
+<!--                hideCityCenterOverlayIfNeed();-->
+<!--            }, 200);        -->
+<!--        });-->
+<!--        google.maps.event.addListener(map, 'dblclick', function(event) {       -->
+<!--            clearTimeout(update_timeout);-->
+<!--        });-->
+
+        // map.addListener('click', function(e) {
+        //     hideCityCenterOverlayIfNeed();
+        // });
+
+        CTGoogleMapView.loadGoogleMapFinish();
+    }
+    
+    function geocodeAddress(geocoder, resultsMap) {
+        
+        var address = document.getElementById('address').value;
+        
+        geocoder.geocode({'address': address}, function(results, status) {
+         if (status === google.maps.GeocoderStatus.OK) {
+         resultsMap.setCenter(results[0].geometry.location);
+         var marker = new google.maps.Marker({
+                                             map: resultsMap,
+                                             position: results[0].geometry.location
+                                             });
+         } else {
+            alert('Geocode was not successful for the following reason: ' + status);
+         }
+        });
+    }
+    
+<!--    function geocodeAddress(address) {-->
+<!--        -->
+<!--        //var address = document.getElementById('address').value;-->
+<!--        -->
+<!--        geocoder.geocode({'address': address}, function(results, status) {-->
+<!--                         if (status === google.maps.GeocoderStatus.OK) {-->
+<!--                            map.setCenter(results[0].geometry.location);-->
+<!--                            var marker = new google.maps.Marker({-->
+<!--                                                             map: map,-->
+<!--                                                             position: results[0].geometry.location-->
+<!--                                                             });-->
+<!--                         } else {-->
+<!--                            alert('Geocode was not successful for the following reason: ' + status);-->
+<!--                         }-->
+<!--         });-->
+<!--    }-->
+
+    // 点击兴趣点的时候不显示兴趣点信息
+    function disablePOIInfoWindow() {
+        var fnSet = google.maps.InfoWindow.prototype.set;
+        google.maps.InfoWindow.prototype.set = function() {};
+    }
+    
+    function GetArgsFromHref(sHref, sArgName) {
+        // split()字符串分割成字符串数组
+        var args = sHref.split("?");
+        var retval = "";
+        if (args[0] == sHref) /*参数为空*/ {
+            return retval; /*无需做任何处理*/
+        }
+        var str = args[1];
+        args = str.split("&");
+        for (var i = 0; i < args.length; i++) {
+            str = args[i];
+            var arg = str.split("=");
+            if (arg.length <= 1) continue;
+            if (arg[0] == sArgName)
+                retval = arg[1];
+        }
+        return retval;
+    }
+
+    // 添加Marker函数   在oc中调用
+    function addMarkers() {
+        var markerSize = getMarkerSize();
+        for (var i = markers.length; i < markerSize; i++) {
+            addMarkerInternal(i);
+        }
+    }
+    // 添加Marker函数 并且同时打开 infowindow
+    function addMarkerAndOpenInfoWindow() {
+        var markerSize = getMarkerSize();
+        if (markerSize != 1)
+            return;
+
+        // var itemName = CTGoogleMapView.getItemName(0);
+        // itemName = stripQuotationMarks(itemName);
+        // infoWindow.setContent(itemName);
+        // infoWindow.open(map, addMarkerInternal(0));
+
+        addMarkerInternal(0);
+        showOverlayForMarkerAtIndex(0);
+    }
+
+    // 具体的如何在Google Map上创建Marker函数
+    function addMarkerInternal(index) {
+        var latitude = CTGoogleMapView.getItemLat(index); // 调用oc getItemLat 获取店铺的纬度
+        //latitude = stripQuotationMarks(latitude) * 1;
+        var longitude = CTGoogleMapView.getItemLon(index);
+        
+        //longitude = stripQuotationMarks(longitude) * 1;
+        
+        var coordinate = new google.maps.LatLng(latitude, longitude);
+        
+        //var icon = getIcon(index);
+        
+        //var icon = 'hotel_map_smal_normal@2x.png';
+        var marker = new google.maps.Marker({
+            position: coordinate,
+            map: map,
+            //icon: icon
+        });
+        
+        marker.setZIndex(index);
+        markers.push(marker);
+        addListenerForMarkerAtIndex(index);
+        return marker;
+    }
+
+    function addListenerForMarkerAtIndex(index) {
+        // 注册Marker点击事件
+        var marker = markers[index];
+                                                
+        google.maps.event.addListener(marker, 'click',
+            function() {
+                CTGoogleMapView.onMarkerClicked(index);
+<!--                var itemName = CTGoogleMapView.getItemName(index);-->
+<!--                itemName = stripQuotationMarks(itemName);-->
+<!--                infoWindow.close();-->
+<!--                if (itemName.length != 0) {-->
+<!--                    infoWindow.setContent(itemName);-->
+<!--                    infoWindow.open(map, marker);-->
+<!--                }-->
+                bringMarkerToFront(index);
+<!--                if (lastIndex >= 0) {-->
+<!--                    var lastHighlightIcon = getHighlightIcon(lastIndex);-->
+<!--                    if (lastHighlightIcon.length != 0) {-->
+<!--                        var icon = getIcon(lastIndex)-->
+<!--                        var lastMarker = markers[lastIndex]-->
+<!--                        lastMarker.setIcon(icon);-->
+<!--                    }-->
+<!--                }-->
+<!--                var highlightIcon = getHighlightIcon(index);-->
+<!--                if (highlightIcon.length != 0) {-->
+<!--                    marker.setIcon(highlightIcon);-->
+<!--                }-->
+                showOverlayForMarkerAtIndex(index);
+                                      
+            });
+    }
+
+    function showOverlayForMarkerAtIndex(index) {
+        if (lastIndex >= 0 && overlaysAll[lastIndex].length > 0) {
+            GL.hideOverlays(overlaysAll[lastIndex]);
+        };
+        var marker = markers[index];
+        var itemName = CTGoogleMapView.getItemName(index);
+        //itemName = stripQuotationMarks(itemName);
+        var overlay = [{
+            lat: marker.getPosition().lat(),
+            lng: marker.getPosition().lng(),
+            content: itemName,
+            isBMap: false,
+            offset: {
+                x: -20,
+                y: -70 //如下图所示，默认的偏移值为div的中
+            },
+            callBack: function(data) {
+                CTGoogleMapView.onInfoWindowClicked(index)
+            }
+        }];
+        var overylayArray = GL.createCustomOverlays(overlay); //返回值为overlay的数组对象
+        GL.showOverLays(overylayArray, map); //overlay展示在地图上
+        overlaysAll[index] = overylayArray;
+        lastIndex = index;
+    }
+
+    function showAllOverlaysAndHideMarkers() {
+        isMutiInfoWindowStyle = true;
+        if (mutiOverlay != null) {
+            GL.hideOverlays(mutiOverlay);  //先hide之前的
+            mutiOverlay = null;
+        };
+        var overlay = [];
+        for (var i = 0; i < markers.length; i++) {
+            var marker = markers[i];
+            var isCityCenter = CTGoogleMapView.isCityCenter(i);
+            isCityCenter = stripQuotationMarks(isCityCenter);
+            if (isCityCenter == 0) {
+                var itemName = CTGoogleMapView.getItemName(i);
+                itemName = stripQuotationMarks(itemName);
+                var item = {
+                    lat: marker.getPosition().lat(),
+                    lng: marker.getPosition().lng(),
+                    content: itemName,
+                    isBMap: false,
+                    offset: {
+                        x: 1,
+                        y: -15 //如下图所示，默认的偏移值为div的中
+                    },
+                    index: i,
+                    callBack: function(data) {
+                        // console.log(data);
+                        CTGoogleMapView.onInfoWindowClicked(data.index);
+                    }
+                };
+                overlay.push(item);
+                markers[i].setMap(null);
+            };
+        };
+        var overylayArray = GL.createCustomOverlays(overlay); //返回值为overlay的数组对象
+        GL.showOverLays(overylayArray, map); //overlay展示在地图上
+        mutiOverlay = overylayArray;
+    }
+
+    function showAllMarkersAndHideOverlays(){
+        isMutiInfoWindowStyle = false;
+        if (mutiOverlay != null) {
+            GL.hideOverlays(mutiOverlay);  //先hide之前的
+            mutiOverlay = null;
+        };
+        for (var i = 0; i < markers.length; i++) {
+            var marker = markers[i];
+            var isCityCenter = CTGoogleMapView.isCityCenter(i);
+            isCityCenter = stripQuotationMarks(isCityCenter);
+            if (isCityCenter == 0) {
+                markers[i].setMap(map);
+            };
+        };
+    }
+
+    function hideCityCenterOverlayIfNeed(){
+        if (isMutiInfoWindowStyle == false) {
+            return;
+        };
+        for (var i = 0; i < markers.length; i++) {
+            var isCityCenter = CTGoogleMapView.isCityCenter(i);
+            isCityCenter = stripQuotationMarks(isCityCenter);
+            if (isCityCenter == 1) {
+                removeOverlay(i);
+            };
+            
+        };
+    }
+
+    function getIcon(index) {
+        var iconpath = CTGoogleMapView.getIconPath(index);
+        iconpath = stripQuotationMarks(iconpath);
+        var iconWidth = CTGoogleMapView.getIconWidth(index);
+        iconWidth = stripQuotationMarks(iconWidth) * 1;
+        var iconHeight = CTGoogleMapView.getIconHeight(index);
+        iconHeight = stripQuotationMarks(iconHeight) * 1;
+        var image = {
+            url: iconpath,
+            scaledSize: new google.maps.Size(iconWidth, iconHeight),
+        };
+        var icon;
+        if (iconpath.length == 0) {
+            icon = '';
+        } else {
+            if (iconWidth > 0 && iconHeight > 0) {
+                icon = image;
+            } else {
+                icon = iconpath;
+            }
+        }
+        return icon;
+    }
+
+    function getHighlightIcon(index) {
+        var iconpath = CTGoogleMapView.getHighlightIconPath(index);
+        iconpath = stripQuotationMarks(iconpath);
+        var iconWidth = CTGoogleMapView.getHighlightIconWidth(index);
+        iconWidth = stripQuotationMarks(iconWidth) * 1;
+        var iconHeight = CTGoogleMapView.getHighlightIconHeight(index);
+        iconHeight = stripQuotationMarks(iconHeight) * 1;
+        var image = {
+            url: iconpath,
+            scaledSize: new google.maps.Size(iconWidth, iconHeight),
+        };
+        var icon;
+        if (iconpath.length == 0) {
+            icon = '';
+        } else {
+            if (iconWidth > 0 && iconHeight > 0) {
+                icon = image;
+            } else {
+                icon = iconpath;
+            }
+        }
+        return icon;
+    }
+
+    //清除index的marker
+    function removeMarker(index) {
+        if (index >= 0 && index < markers.length) {
+            for (var i = index; i < markers.length; i++) {
+                google.maps.event.clearInstanceListeners(markers[i]);
+            };
+            console.log('removeMarker():' + index);
+            removeOverlay(index);
+            markers[index].setMap(null)
+            removeElement(index, markers);
+            console.log('markers.length:' + markers.length);
+            for (var i = index; i < markers.length; i++) {
+                addListenerForMarkerAtIndex(i);
+            };
+        }
+    }
+
+    function removeOverlay(index) {
+        if (index == lastIndex && overlaysAll[lastIndex].length > 0) {
+            GL.hideOverlays(overlaysAll[index])
+            lastIndex = -1;
+        };
+        delete overlaysAll[index];
+    }
+
+    // 清除Marker函数
+    function clearMarkers() {
+        console.log('markers.length:' + markers.length);
+        console.log('clearMarkers()');
+        for (var i in markers) {
+            +markers[i].setMap(null);
+            console.log('clearMarker():' + i);
+        }
+        markers = [];
+        clearOverlays();
+        console.log('markers.length:' + markers.length);
+    }
+
+    function clearOverlays() {
+        isMutiInfoWindowStyle = false;
+        if (lastIndex >= 0 && overlaysAll[lastIndex].length > 0) {
+            GL.hideOverlays(overlaysAll[lastIndex])
+        };
+        lastIndex = -1;
+        for (var i in overlaysAll) {
+            delete overlaysAll[i];
+        }
+        if (mutiOverlay != null) {
+            GL.hideOverlays(mutiOverlay);
+            mutiOverlay = null;
+        };
+    }
+
+    // 自动缩放地图函数
+    function zoomToSpan(swLat, swLng, neLat, neLng) {
+        console.log('zoomToSpan()');
+        var swLatLng = new google.maps.LatLng(swLat, swLng);
+        var neLatLng = new google.maps.LatLng(neLat, neLng);
+        var latLngBounds = new google.maps.LatLngBounds(swLatLng, neLatLng);
+        map.fitBounds(latLngBounds);
+        console.log('map.fitBounds()');
+    }
+    // 获取地图中心点经纬度坐标和屏幕半径, 然后回调native层业务搜索
+    function getGeoPointAndRadius() {
+        var latitude = map.getCenter().lat();
+        var longitude = map.getCenter().lng();
+        var radius = getScreenMapRadius();
+        CTGoogleMapView.geoPointAndRadius([latitude, longitude, radius]);
+    }
+
+    // 获取地图半径, 从地图中心点到屏幕顶部的物理投射距离
+    function getScreenMapRadius() {
+        var center = map.getCenter();
+        var topCenter = new google.maps.LatLng(map.getBounds().getNorthEast().lat(), center.lng());
+        return google.maps.geometry.spherical.computeDistanceBetween(center, topCenter);
+    }
+
+    function getVisibleMapRect() {
+        var swLat = map.getBounds().getSouthWest().lat();
+        var swLng = map.getBounds().getSouthWest().lng();
+        var neLat = map.getBounds().getNorthEast().lat();
+        var neLng = map.getBounds().getNorthEast().lng();
+        CTGoogleMapView.visibleMapRect([swLat, swLng, neLat, neLng]);
+    }
+    
+    function test() {
+        alert('test');
+        CTGoogleMapView.myTest();
+    }
+
+    // 设置地图中心点
+    function setMapCenter(lat, lng) {
+        console.log('setMapCenter()');
+        map.setCenter(new google.maps.LatLng(lat, lng));
+    }
+    // 设置地图缩放比例
+    function setMapZoom(zoom) {
+        alert('zoom = ' + zoom);
+        console.log('setMapZoom()');
+        map.setZoom(zoom);
+    }
+    // 设置地图中心点、缩放比例
+    function setMapCenterAndZoom(lat, lng, zoom) {
+        console.log('setMapCenterAndZoom(' + lat + ',' + lng + ',' + zoom + ')');
+        map.setCenter(new google.maps.LatLng(lat, lng));
+        map.setZoom(zoom);
+    }
+
+    function setMapCenterZoom(lat, lng) {
+        console.log('setMapCenterZoom(' + lat + ',' + lng + ',' + ')');
+        map.setCenter(new google.maps.LatLng(lat, lng));
+        map.setZoom(map.getZoom() + 1);
+        map.setZoom(map.getZoom() - 1);
+    }
+
+    function bringMarkerToFront(index) {
+        for (var i = 0; i < markers.length; i++) {
+            markers[i].setZIndex(i);
+        }
+        markers[index].setZIndex(google.maps.Marker.MAX_ZINDEX + 1);
+    }
+
+    //设置当前位置Marker
+    function setMyLocation(lat, lng) {
+        console.log('setMyLocation()');
+
+        if (myLocation !== null) {
+            myLocation.setMap(null);
+        }
+        var latLng = new google.maps.LatLng(lat, lng);
+        var iconpath = CTGoogleMapView.getMyLocationIcon();
+        //iconpath = stripQuotationMarks(iconpath);
+        myLocation = new google.maps.Marker({
+            position: latLng,
+            map: map,
+            draggable: false,
+            icon: iconpath
+        });
+        // by zhf
+        map.setCenter(myLocation.getPosition());
+    }
+
+    //弹出指定marker的infowindow
+    function performClickMarker(index) {
+        google.maps.event.trigger(markers[index], 'click');
+    }
+    //放大地图
+    function zoomIn() {
+        map.setZoom(map.getZoom() + 1);
+    }
+    //缩小地图
+    function zoomOut() {
+        map.setZoom(map.getZoom() - 1);
+    }
+
+    function getMarkerSize() {
+        var markerSize = CTGoogleMapView.getItemsCount();
+<!--        markerSize = stripQuotationMarks(markerSize);-->
+<!--        markerSize = parseInt(markerSize);-->
+        return markerSize
+    }
+    //去掉首尾双引号
+    function stripQuotationMarks(str) {
+        return str.substring(1, (str.length - 1))
+    }
+
+    //删除index的元素
+    function removeElement(index, array) {
+        if (index >= 0 && index < array.length) {
+            for (var i = index; i < array.length; i++) {
+                array[i] = array[i + 1];
+            }
+            array.length = array.length - 1;
+        }
+        return array;
+    }
+    
+    </script>
+    
+<!--    <script src="http://ditu.google.cn/maps/api/js?v=3&key=AIzaSyBwHjyjFbfSja8JFz3l--C3es_V29itDL4&libraries=geometry&sensor=true&language=zhCN&callback=initMap" async defer></script>-->
+
+    <script src="http://ditu.google.cn/maps/api/js?libraries=geometry&sensor=true&language=zhCN&callback=initMap" async defer></script>
+</body>
+
+</html>

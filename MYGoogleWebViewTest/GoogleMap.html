@@ -106,7 +106,7 @@
         map = new google.maps.Map(document.getElementById('map'), mapOptions);
         
         // 点击兴趣点的时候不显示兴趣点信息
-        disablePOIInfoWindow();
+        // disablePOIInfoWindow();
         
         // infoWindow = new google.maps.InfoWindow({
         //     maxWidth: window.screen.availWidth / 4
@@ -252,17 +252,17 @@
     function addListenerForMarkerAtIndex(index) {
         // 注册Marker点击事件
         var marker = markers[index];
-                                                
+        infoWindow = new google.maps.InfoWindow();
         google.maps.event.addListener(marker, 'click',
             function() {
                 CTGoogleMapView.onMarkerClicked(index);
-<!--                var itemName = CTGoogleMapView.getItemName(index);-->
+                var itemName = CTGoogleMapView.getItemName(index);
 <!--                itemName = stripQuotationMarks(itemName);-->
 <!--                infoWindow.close();-->
-<!--                if (itemName.length != 0) {-->
-<!--                    infoWindow.setContent(itemName);-->
-<!--                    infoWindow.open(map, marker);-->
-<!--                }-->
+                if (itemName.length != 0) {
+                    infoWindow.setContent(itemName);
+                    infoWindow.open(map, marker);
+                }
                 bringMarkerToFront(index);
 <!--                if (lastIndex >= 0) {-->
 <!--                    var lastHighlightIcon = getHighlightIcon(lastIndex);-->
@@ -276,7 +276,7 @@
 <!--                if (highlightIcon.length != 0) {-->
 <!--                    marker.setIcon(highlightIcon);-->
 <!--                }-->
-                showOverlayForMarkerAtIndex(index);
+                //showOverlayForMarkerAtIndex(index);
                                       
             });
     }

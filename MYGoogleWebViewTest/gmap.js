@@ -4,7 +4,7 @@
  */
 define([], function () {
   var GL = {};
-
+   // 自定义覆盖图
   function CustomOverlay(point,options) {
     // 初始化参数：坐标、文字、地图
     //this._map = map;
@@ -15,7 +15,7 @@ define([], function () {
     this._callBack = options.callBack;
     this._point = point;
     // 加入map
-    //if(this.setMap){this.setMap(map);}
+    //ifl(this.setMap){this.setMap(map);}
   }
   /**
    * 自定义控件类
@@ -306,7 +306,7 @@ define([], function () {
    * @returns {{points: Array}}
    */
   GL.createCustomOverlays = function(config) {
-       
+    
     var overlays = [];
     CustomOverlay.prototype = new google.maps.OverlayView();
        
@@ -334,8 +334,9 @@ define([], function () {
         div.style.top = center.y + ((this._offset && this._offset.y) || 0) +  'px';
         div.style.position = 'absolute';
         div.style.padding = "2px";
-        // by zhf
+        // add by zhf
         //div.style.background = "url('http://googlemaps.github.io/js-v2-samples/images/blueinfowindow.gif')";
+        // end
         var children = div.children[0];
         if (children) {
           children.style.bottom = '0px';
@@ -357,7 +358,7 @@ define([], function () {
         this._point = point;
       }
     };
-       
+    
     CustomOverlay.prototype.open = function(mapObj,point){
       if(!this._map && !mapObj){
         return false;

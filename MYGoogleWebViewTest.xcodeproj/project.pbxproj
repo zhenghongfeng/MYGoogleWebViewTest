@@ -48,6 +48,10 @@
 		BA31EB831D9B69490010AF2D /* dest_map_btn_around_search@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = BA31EB811D9B69490010AF2D /* dest_map_btn_around_search@3x.png */; };
 		BA31EB851D9B6A340010AF2D /* hotel_icon_poi_selected@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = BA31EB841D9B6A340010AF2D /* hotel_icon_poi_selected@2x.png */; };
 		BA31EB871D9B6A810010AF2D /* hotel_map_smal_normal@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = BA31EB861D9B6A810010AF2D /* hotel_map_smal_normal@2x.png */; };
+		BA90C1C21DBEED5100CB58A1 /* map_point_on.png in Resources */ = {isa = PBXBuildFile; fileRef = BA90C1BF1DBEED5100CB58A1 /* map_point_on.png */; };
+		BA90C1C31DBEED5100CB58A1 /* map_point_on@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = BA90C1C01DBEED5100CB58A1 /* map_point_on@2x.png */; };
+		BA90C1C41DBEED5100CB58A1 /* map_point_on@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = BA90C1C11DBEED5100CB58A1 /* map_point_on@3x.png */; };
+		BA90C1C81DC03EF400CB58A1 /* JZLocationConverter.m in Sources */ = {isa = PBXBuildFile; fileRef = BA90C1C71DC03EF400CB58A1 /* JZLocationConverter.m */; };
 		BA937AFF1D8FAD7000F9CAB7 /* WebViewJavascriptBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = BA937AF81D8FAD7000F9CAB7 /* WebViewJavascriptBridge.m */; };
 		BA937B001D8FAD7000F9CAB7 /* WebViewJavascriptBridge_JS.m in Sources */ = {isa = PBXBuildFile; fileRef = BA937AFA1D8FAD7000F9CAB7 /* WebViewJavascriptBridge_JS.m */; };
 		BA937B011D8FAD7000F9CAB7 /* WebViewJavascriptBridgeBase.m in Sources */ = {isa = PBXBuildFile; fileRef = BA937AFC1D8FAD7000F9CAB7 /* WebViewJavascriptBridgeBase.m */; };
@@ -158,6 +162,11 @@
 		BA31EB811D9B69490010AF2D /* dest_map_btn_around_search@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "dest_map_btn_around_search@3x.png"; sourceTree = "<group>"; };
 		BA31EB841D9B6A340010AF2D /* hotel_icon_poi_selected@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "hotel_icon_poi_selected@2x.png"; sourceTree = "<group>"; };
 		BA31EB861D9B6A810010AF2D /* hotel_map_smal_normal@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "hotel_map_smal_normal@2x.png"; sourceTree = "<group>"; };
+		BA90C1BF1DBEED5100CB58A1 /* map_point_on.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = map_point_on.png; sourceTree = "<group>"; };
+		BA90C1C01DBEED5100CB58A1 /* map_point_on@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "map_point_on@2x.png"; sourceTree = "<group>"; };
+		BA90C1C11DBEED5100CB58A1 /* map_point_on@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "map_point_on@3x.png"; sourceTree = "<group>"; };
+		BA90C1C61DC03EF400CB58A1 /* JZLocationConverter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JZLocationConverter.h; sourceTree = "<group>"; };
+		BA90C1C71DC03EF400CB58A1 /* JZLocationConverter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JZLocationConverter.m; sourceTree = "<group>"; };
 		BA937AF71D8FAD7000F9CAB7 /* WebViewJavascriptBridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebViewJavascriptBridge.h; sourceTree = "<group>"; };
 		BA937AF81D8FAD7000F9CAB7 /* WebViewJavascriptBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WebViewJavascriptBridge.m; sourceTree = "<group>"; };
 		BA937AF91D8FAD7000F9CAB7 /* WebViewJavascriptBridge_JS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebViewJavascriptBridge_JS.h; sourceTree = "<group>"; };
@@ -315,6 +324,15 @@
 			path = MJExtension;
 			sourceTree = "<group>";
 		};
+		BA90C1C51DC03EF400CB58A1 /* JZLocationConverter */ = {
+			isa = PBXGroup;
+			children = (
+				BA90C1C61DC03EF400CB58A1 /* JZLocationConverter.h */,
+				BA90C1C71DC03EF400CB58A1 /* JZLocationConverter.m */,
+			);
+			path = JZLocationConverter;
+			sourceTree = "<group>";
+		};
 		BA937AF61D8FAD7000F9CAB7 /* WebViewJavascriptBridge */ = {
 			isa = PBXGroup;
 			children = (
@@ -369,10 +387,14 @@
 				BA31EB801D9B69490010AF2D /* dest_map_btn_around_search@2x.png */,
 				BA31EB811D9B69490010AF2D /* dest_map_btn_around_search@3x.png */,
 				BA31EB7E1D9B691C0010AF2D /* common_ico_map_locate.png */,
+				BA90C1BF1DBEED5100CB58A1 /* map_point_on.png */,
+				BA90C1C01DBEED5100CB58A1 /* map_point_on@2x.png */,
+				BA90C1C11DBEED5100CB58A1 /* map_point_on@3x.png */,
 				BA31EB791D9A4C9D0010AF2D /* myLocation.png */,
 				BA31EB751D9A4A0D0010AF2D /* currentLocation.png */,
 				BA08F1361D98F6A800D387C1 /* icon_map_arrow@2x.png */,
 				BA08F1341D98EC2600D387C1 /* index.html */,
+				BA90C1C51DC03EF400CB58A1 /* JZLocationConverter */,
 				BA937AF61D8FAD7000F9CAB7 /* WebViewJavascriptBridge */,
 				BA937B0C1D91328700F9CAB7 /* GoogleMap.html */,
 				BA937B0A1D9131E900F9CAB7 /* gmap.js */,
@@ -533,12 +555,15 @@
 				BA31EB7A1D9A4C9D0010AF2D /* myLocation.png in Resources */,
 				BA937B0D1D91328700F9CAB7 /* GoogleMap.html in Resources */,
 				BA31EB831D9B69490010AF2D /* dest_map_btn_around_search@3x.png in Resources */,
+				BA90C1C31DBEED5100CB58A1 /* map_point_on@2x.png in Resources */,
 				BA08F1371D98F6A800D387C1 /* icon_map_arrow@2x.png in Resources */,
 				BA937B0B1D9131E900F9CAB7 /* gmap.js in Resources */,
+				BA90C1C21DBEED5100CB58A1 /* map_point_on.png in Resources */,
 				BAFF67421D77BDD000FCBC8B /* LaunchScreen.storyboard in Resources */,
 				BA31EB671D9A06C90010AF2D /* LICENSE in Resources */,
 				BA08F1351D98EC2600D387C1 /* index.html in Resources */,
 				BAFF673F1D77BDD000FCBC8B /* Assets.xcassets in Resources */,
+				BA90C1C41DBEED5100CB58A1 /* map_point_on@3x.png in Resources */,
 				BA31EB871D9B6A810010AF2D /* hotel_map_smal_normal@2x.png in Resources */,
 				BA31EB821D9B69490010AF2D /* dest_map_btn_around_search@2x.png in Resources */,
 				BA31EB401D9A04910010AF2D /* LICENSE in Resources */,
@@ -589,6 +614,7 @@
 				BA31EB3E1D9A04910010AF2D /* AFURLResponseSerialization.m in Sources */,
 				BA31EB451D9A04910010AF2D /* UIActivityIndicatorView+AFNetworking.m in Sources */,
 				BA31EB6B1D9A06C90010AF2D /* MJPropertyKey.m in Sources */,
+				BA90C1C81DC03EF400CB58A1 /* JZLocationConverter.m in Sources */,
 				BA31EB441D9A04910010AF2D /* AFNetworkActivityIndicatorManager.m in Sources */,
 				BA31EB6C1D9A06C90010AF2D /* MJPropertyType.m in Sources */,
 				BA31EB421D9A04910010AF2D /* AFAutoPurgingImageCache.m in Sources */,

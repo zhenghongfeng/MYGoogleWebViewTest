@@ -45,6 +45,8 @@
 
 - (NSString *)getItemName:(int)index;
 
+- (NSString *)getItemSubName:(int)index;
+
 - (void)onInfoWindowClicked:(int)index;
 
 - (void)visibleMapRect:(id)mapRect;
@@ -55,6 +57,9 @@
 
 - (double)getHighlightIconHeight:(int)index;
 
+// 反编码后的地理位置
+
+- (void)getPlace:(id)place;
 
 
 

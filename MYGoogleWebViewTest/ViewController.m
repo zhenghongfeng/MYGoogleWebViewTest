@@ -13,6 +13,7 @@
 #import "MJExtension.h"
 #import "BYShop.h"
 #import "WGS84TOGCJ02.h"
+#import "JZLocationConverter.h"
 
 @interface ViewController () <CLLocationManagerDelegate, UIWebViewDelegate, JSExportProtocol>
 
@@ -34,11 +35,22 @@
 
 @property (nonatomic, strong) NSArray *coordinateArray;
 
+@property (nonatomic, strong) UIImageView *centerImageView;
+
 @end
 
 @implementation ViewController
 
 #pragma mark - lazy load
+
+- (UIImageView *)centerImageView
+{
+    if (_centerImageView == nil) {
+        _centerImageView = [[UIImageView alloc] initWithFrame:CGRectMake([UIScreen mainScreen].bounds.size.width / 2 - 10, [UIScreen mainScreen].bounds.size.height / 2 - 30, 20, 30)];
+        _centerImageView.image = [UIImage imageNamed:@"map_point_on"];
+    }
+    return _centerImageView;
+}
 
 - (CLLocationManager *)locationManager
 {
@@ -82,11 +94,14 @@
     [super viewDidLoad];
     
     self.shops = @[].mutableCopy;
+    
     self.coordinateArray = [NSArray array];
     
     [self.view addSubview:self.webView];
     
     [self.view addSubview:self.currentButton];
+    
+    [self.view addSubview:self.centerImageView];
     
     [self.locationManager startUpdatingLocation];
     
@@ -166,7 +181,7 @@
 
 - (void)mapCenterChanged:(id)mapCenter
 {
-    NSLog(@"mapCenterChanged");
+    NSLog(@"mapCenterChanged====%@", mapCenter);
     [self.webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"clearMarkers()"]];
     
     [self.webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"getVisibleMapRect()"]];
@@ -214,12 +229,23 @@
     return shop.name;
 }
 
+- (NSString *)getItemSubName:(int)index
+{
+    BYShop *shop = self.shops[index];
+    return shop.myDescription;
+}
+
 - (void)onInfoWindowClicked:(int)index
 {
     NSLog(@"onInfoWindowClicked点击了%d", index);
     BYShop *shop = self.shops[index];
     NSLog(@"name = %@, category = %@, description = %@", shop.name, shop.category, shop.myDescription);
     
+}
+
+- (void)getPlace:(id)place
+{
+    NSLog(@"place = %@", place);
 }
 
 //- (NSString *)getIconPath:(int)index
@@ -249,6 +275,31 @@
 {
     NSLog(@"currentButtonClick");
     // 将当前位置的经纬度传给js的setMyLocation()函数
+    
+    /*
+    // 高德坐标转百度坐标
+    CLLocationDegrees x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+    CLLocationDegrees x = self.currentCoord.longitude, y = self.currentCoord.latitude;
+    CLLocationDegrees z = sqrt(x * x + y * y) + 0.00002 * sin(y * x_pi);
+    CLLocationDegrees theta = atan2(y, x) + 0.000003 * cos(x * x_pi);
+    CLLocationDegrees bd_lon = z * cos(theta) + 0.0065;
+    CLLocationDegrees bd_lat = z * sin(theta) + 0.006;
+    
+    [self.webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"setMyLocation(%f, %f)", bd_lat, bd_lon]];
+     */
+    
+    /*
+    /// 百度坐标转高德坐标
+    CLLocationDegrees x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+    CLLocationDegrees x = self.currentCoord.longitude - 0.0065, y = self.currentCoord.latitude - 0.006;
+    CLLocationDegrees z = sqrt(x * x + y * y) - 0.00002 * sin(y * x_pi);
+    CLLocationDegrees theta = atan2(y, x) - 0.000003 * cos(x * x_pi);
+    CLLocationDegrees gg_lon = z * cos(theta);
+    CLLocationDegrees gg_lat = z * sin(theta);
+    [self.webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"setMyLocation(%f, %f)", gg_lat, gg_lon]];
+     */
+    
+    
     [self.webView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"setMyLocation(%f, %f)", self.currentCoord.latitude, self.currentCoord.longitude]];
 }
 
@@ -264,16 +315,14 @@
     [self.locationManager stopUpdatingLocation];
     
     CLLocation *loc = [locations objectAtIndex:0];
-    self.currentCoord = loc.coordinate;
     
     //判断是不是属于国内范围
-//    if (![WGS84TOGCJ02 isLocationOutOfChina:[loc coordinate]]) {
-//        //转换后的coord
-//        CLLocationCoordinate2D coord = [WGS84TOGCJ02 transformFromWGSToGCJ:[loc coordinate]];
-//        self.currentCoord = coord;
-//    } else {
-//        self.currentCoord = loc.coordinate;
-//    }
+    if (![WGS84TOGCJ02 isLocationOutOfChina:[loc coordinate]]) {
+        //转换后的coord
+        self.currentCoord = [JZLocationConverter wgs84ToGcj02:loc.coordinate];
+    } else {
+        self.currentCoord = loc.coordinate;
+    }
 }
 
 - (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status

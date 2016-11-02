@@ -17,6 +17,7 @@
     #map {
         height: 100%;
     }
+    
     #floating-panel {
         position: absolute;
         top: 20px;
@@ -83,12 +84,14 @@
         var lng = CTGoogleMapView.getCurrentLocationLon();
         
         geocoder = new google.maps.Geocoder();
+        
         document.getElementById('submit').addEventListener('click', function() {
                                                            geocodeAddress(geocoder, map);
                                                            });
               
         // 设置地图参数
         var mapOptions = {
+            clickableIcons: false,
             zoom: 13,
             zoomControl: false,
             // zoomControlOptions: {
@@ -105,8 +108,27 @@
         
         map = new google.maps.Map(document.getElementById('map'), mapOptions);
         
+        google.maps.event.addListener(map, 'click', function() {
+                                      if(infoWindow)
+                                          infoWindow.close();
+                                      });
+        
+<!--        var loc = {};-->
+
+<!--        if(google.loader.ClientLocation) {-->
+<!--            loc.lat = google.loader.ClientLocation.latitude;-->
+<!--            loc.lng = google.loader.ClientLocation.longitude;-->
+
+<!--            var latlng = new google.maps.LatLng(loc.lat, loc.lng);-->
+<!--            -->
+<!--            geocoder.geocode({'latLng': latlng}, function(results, status) {-->
+<!--                             if(status == google.maps.GeocoderStatus.OK) {-->
+<!--                             alert(results[0]['formatted_address']);-->
+<!--                             };-->
+<!--                             });-->
+<!--        }-->
         // 点击兴趣点的时候不显示兴趣点信息
-        // disablePOIInfoWindow();
+        //disablePOIInfoWindow();
         
         // infoWindow = new google.maps.InfoWindow({
         //     maxWidth: window.screen.availWidth / 4
@@ -117,14 +139,31 @@
             function() {
                 var center = map.getCenter();
                 // 调用oc方法
-                CTGoogleMapView.mapCenterChanged([center.lat(), center.lng()])
+                CTGoogleMapView.mapCenterChanged([center.lat(), center.lng()]);
+                
+                // 根据经纬度反编码
+                                      geocoder.geocode({'location': center}, function(results, status) {
+                                                       if (status === google.maps.GeocoderStatus.OK) {
+                                                       if (results[1]) {
+                                                       //map.setZoom(11);
+                                                       //var place = results[1];
+                                                       var place = results[0].formatted_address;
+                                                       CTGoogleMapView.getPlace(place);
+                                                       } else {
+                                                       window.alert('No results found');
+                                                       }
+                                                       } else {
+                                                       window.alert('Geocoder failed due to: ' + status);
+                                                       }
+                                                       });
+                                      
             });
 
         // 设置Map Zoom Change Event
         google.maps.event.addListener(map, 'zoom_changed',
             function() {
                 // 调用oc方法
-                CTGoogleMapView.mapZoomChanged(map.getZoom())
+                CTGoogleMapView.mapZoomChanged(map.getZoom());
             });
 
 <!--        google.maps.event.addListener(map, 'click', function(event){-->
@@ -150,16 +189,17 @@
         geocoder.geocode({'address': address}, function(results, status) {
          if (status === google.maps.GeocoderStatus.OK) {
          resultsMap.setCenter(results[0].geometry.location);
-         var marker = new google.maps.Marker({
-                                             map: resultsMap,
-                                             position: results[0].geometry.location
-                                             });
+<!--         var marker = new google.maps.Marker({-->
+<!--                                             map: resultsMap,-->
+<!--                                             position: results[0].geometry.location-->
+<!--                                             });-->
          } else {
             alert('Geocode was not successful for the following reason: ' + status);
          }
         });
     }
     
+    // OC 搜索按钮
 <!--    function geocodeAddress(address) {-->
 <!--        -->
 <!--        //var address = document.getElementById('address').value;-->
@@ -167,10 +207,10 @@
 <!--        geocoder.geocode({'address': address}, function(results, status) {-->
 <!--                         if (status === google.maps.GeocoderStatus.OK) {-->
 <!--                            map.setCenter(results[0].geometry.location);-->
-<!--                            var marker = new google.maps.Marker({-->
-<!--                                                             map: map,-->
-<!--                                                             position: results[0].geometry.location-->
-<!--                                                             });-->
+<!--<!--                            var marker = new google.maps.Marker({-->-->
+<!--<!--                                                             map: map,-->-->
+<!--<!--                                                             position: results[0].geometry.location-->-->
+<!--<!--                                                             });-->-->
 <!--                         } else {-->
 <!--                            alert('Geocode was not successful for the following reason: ' + status);-->
 <!--                         }-->
@@ -243,8 +283,8 @@
             //icon: icon
         });
         
-        marker.setZIndex(index);
-        markers.push(marker);
+        //marker.setZIndex(index); // 设置元素的堆叠顺序
+        markers.push(marker);// 向数组中添加元素
         addListenerForMarkerAtIndex(index);
         return marker;
     }
@@ -252,17 +292,41 @@
     function addListenerForMarkerAtIndex(index) {
         // 注册Marker点击事件
         var marker = markers[index];
-        infoWindow = new google.maps.InfoWindow();
+        //infoWindow = new google.maps.InfoWindow();
         google.maps.event.addListener(marker, 'click',
             function() {
                 CTGoogleMapView.onMarkerClicked(index);
                 var itemName = CTGoogleMapView.getItemName(index);
+                var itemSubName = CTGoogleMapView.getItemSubName(index);
+                
+                  var contentString = document.createElement("div");
+                  contentString.innerHTML = "<h4>" + itemName + "</h4><p><small>" + itemSubName + "</small></p>";
+                  
+                  var myInfoWindow = new google.maps.InfoWindow();
+                  myInfoWindow.setContent(contentString);
+                  google.maps.event.addDomListener(contentString, "click", function() {
+                                                   CTGoogleMapView.onInfoWindowClicked(index);
+                                                   });
+                  // 去掉叉号
+                  google.maps.event.addListener(myInfoWindow, "domready", function() {
+                                                var iwOuter = document.querySelector(".gm-style-iw");
+                                                var iwClose = iwOuter.nextSibling;
+                                                iwClose.style.display = "none";
+                                                iwClose.nextSibling.style.display = "none";
+                                                });
+                  if(infoWindow) {
+                      infoWindow.close();
+                  }
+                  infoWindow = myInfoWindow;
+                  myInfoWindow.open(map, marker);
+                                      
+                
 <!--                itemName = stripQuotationMarks(itemName);-->
 <!--                infoWindow.close();-->
-                if (itemName.length != 0) {
-                    infoWindow.setContent(itemName);
-                    infoWindow.open(map, marker);
-                }
+<!--                if (itemName.length != 0) {-->
+<!--                    infoWindow.setContent(itemName);-->
+<!--                    infoWindow.open(map, marker);-->
+<!--                }-->
                 bringMarkerToFront(index);
 <!--                if (lastIndex >= 0) {-->
 <!--                    var lastHighlightIcon = getHighlightIcon(lastIndex);-->
@@ -277,7 +341,7 @@
 <!--                    marker.setIcon(highlightIcon);-->
 <!--                }-->
                 //showOverlayForMarkerAtIndex(index);
-                                      
+                
             });
     }
 
@@ -602,9 +666,9 @@
     
     </script>
     
-<!--    <script src="http://ditu.google.cn/maps/api/js?v=3&key=AIzaSyBwHjyjFbfSja8JFz3l--C3es_V29itDL4&libraries=geometry&sensor=true&language=zhCN&callback=initMap" async defer></script>-->
+    <script src="http://ditu.google.cn/maps/api/js?v=3&key=AIzaSyBwHjyjFbfSja8JFz3l--C3es_V29itDL4&libraries=geometry&sensor=true&language=zhCN&callback=initMap" async defer></script>
 
-    <script src="http://ditu.google.cn/maps/api/js?libraries=geometry&sensor=true&language=zhCN&callback=initMap" async defer></script>
+<!--    <script src="http://ditu.google.cn/maps/api/js?libraries=geometry&sensor=true&language=zhCN&callback=initMap" async defer></script>-->
 </body>
 
 </html>
